@@ -17,3 +17,14 @@ ServerErrorHandler* ServerErrorHandler::clone() const
 {
 	return new ServerErrorHandler(*this);
 }
+
+void ServerErrorHandler::SendError(QTcpSocket& reciver, QString message)
+{
+    QJsonObject errorMessage;
+    errorMessage["type"] = "ERROR";
+    errorMessage["data"] = QJsonObject{
+        {"message", message}
+    };
+    reciver.write(QJsonDocument(errorMessage).toJson(QJsonDocument::Compact).append('\n'));
+    reciver.flush();
+}
