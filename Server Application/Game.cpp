@@ -1,6 +1,6 @@
 #include "Game.h"
 
-Game::Game(QString hostUserName, int port, QObject* parent): QObject(parent)
+Game::Game(QString gameName, QString hostUserName, int port, QObject* parent): QObject(parent), _gameID(_Counter), _gameName(gameName)
 {
     _hostPlayer = hostUserName;
     _hostScore = 0;
@@ -10,8 +10,9 @@ Game::Game(QString hostUserName, int port, QObject* parent): QObject(parent)
     _intenalGameServer = nullptr;
     _hostSocket = nullptr;
     _guestSocket = nullptr;
-    EnterHandler("MOVE", &Move);
-    EnterHandler("SETUP", &SetupGameLogic);
+    AddHandler<Game>("MOVE", this, &Game::Move);
+    AddHandler<Game>("SETUP", this, &Game::SetupGameLogic);
+    ++_Counter;
 }
 
 Game::~Game()
@@ -43,8 +44,10 @@ bool Game::InitializingRoom()
 {
     _intenalGameServer = new QTcpServer();
     _intenalGameServer->setParent(this);
-    if (_intenalGameServer->listen(QHostAddress::Any, _serverPort) == false)
+    if (_intenalGameServer->listen(QHostAddress::Any, _serverPort) == false) {
+        delete _intenalGameServer;
         return false;
+    }
     connect(_intenalGameServer, &QTcpServer::newConnection, this, &Game::OnPlayerConnected);
     return true;
 }
@@ -58,8 +61,7 @@ void Game::OnReadyRead()
     QString type = Response["type"].toString();
     QJsonObject data = Response["data"].toObject();
     if (_ResponseHandler.contains(type)) {
-        HandlerFunction func = _ResponseHandler[type];
-        (this->*func)(data);
+        _ResponseHandler[type](data);
     }
 }
 
@@ -91,11 +93,6 @@ void Game::OnPlayerDisconnect()
             _hostSocket->flush();
         }
     }
-}
-
-void Game::EnterHandler(const QString& type, HandlerFunction value)
-{
-    _ResponseHandler.insert(type, value);
 }
 
 void Game::OnPlayerConnected() {
