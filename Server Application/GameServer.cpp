@@ -23,7 +23,9 @@ void GameServer::ReadData()
 	ServerRequestHandler* handler = new ServerRequestHandler(SenderClient);
 	handler->moveToThread(HandlerThread);
 	connect(HandlerThread, &QThread::started, handler, [handler, SenderClient]() {
-		handler->AnalyzeResponse(SenderClient->readAll());
+		while (SenderClient->canReadLine()) {
+			handler->AnalyzeResponse(SenderClient->readLine());
+		}
 	});
 	connect(HandlerThread, &QThread::finished, handler, &QObject::deleteLater);
 	connect(HandlerThread, &QThread::finished, HandlerThread, &QObject::deleteLater);
