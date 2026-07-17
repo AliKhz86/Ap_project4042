@@ -52,6 +52,7 @@ public:
 	virtual void SaveGame() = 0;
 	virtual QVector<ReturnNode> LoadGames() = 0;
 	bool InitializingRoom();
+	int GetGameID() const;
 
 
 signals:

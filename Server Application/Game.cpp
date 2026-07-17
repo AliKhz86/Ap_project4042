@@ -52,6 +52,11 @@ bool Game::InitializingRoom()
     return true;
 }
 
+int Game::GetGameID() const
+{
+    return _gameID;
+}
+
 void Game::OnReadyRead()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
