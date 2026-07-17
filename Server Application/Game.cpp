@@ -57,16 +57,18 @@ void Game::OnReadyRead()
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
     if (socket == nullptr)
         return;
-    QJsonDocument ResponseDocument = QJsonDocument::fromJson(socket->readAll());
-    if (ResponseDocument.isNull() || ResponseDocument.isEmpty()) {
-        qDebug() << "An Error to Analyze Response in Game File";
-        return;
-    }
-    QJsonObject ResponseObject = ResponseDocument.object();
-    QString type = ResponseObject["type"].toString();
-    QJsonObject data = ResponseObject["data"].toObject();
-    if (_ResponseHandler.contains(type)) {
-        _ResponseHandler[type](data);
+    while (socket->canReadLine()) {
+        QJsonDocument ResponseDocument = QJsonDocument::fromJson(socket->readLine());
+        if (ResponseDocument.isNull() || ResponseDocument.isEmpty()) {
+            qDebug() << "An Error to Analyze Response in Game File";
+            return;
+        }
+        QJsonObject ResponseObject = ResponseDocument.object();
+        QString type = ResponseObject["type"].toString();
+        QJsonObject data = ResponseObject["data"].toObject();
+        if (_ResponseHandler.contains(type)) {
+            _ResponseHandler[type](data);
+        }
     }
 }
 
